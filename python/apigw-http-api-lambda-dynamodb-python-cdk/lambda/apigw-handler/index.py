@@ -6,6 +6,10 @@ import os
 import json
 import logging
 import uuid
+from aws_xray_sdk.core import xray_recorder
+from aws_xray_sdk.core import patch_all
+
+patch_all()
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -14,8 +18,13 @@ dynamodb_client = boto3.client("dynamodb")
 
 
 def handler(event, context):
+    request_id = context.request_id
+    trace_id = os.environ.get('_X_AMZN_TRACE_ID', 'N/A')
+    
     table = os.environ.get("TABLE_NAME")
+    logging.info(f"Request ID: {request_id}, Trace ID: {trace_id}")
     logging.info(f"## Loaded table name from environemt variable DDB_TABLE: {table}")
+    
     if event["body"]:
         item = json.loads(event["body"])
         logging.info(f"## Received payload: {item}")
